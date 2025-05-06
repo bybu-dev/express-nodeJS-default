@@ -99,8 +99,10 @@ Jest is used for unit testing. All repositories and services are mockable.
 
 ```bash
 npm run test
+```
 
 ## 🔐 Environment Variables
+
 .env file setup:
 
 ACCESS_TOKEN_SECRET=...
@@ -108,10 +110,11 @@ REFRESH_TOKEN_SECRET=...
 ADMIN_ACCESS_TOKEN_SECRET=...
 WEB_TOKEN_SECRET=...
 API_ACCESS_TOKEN=...
-EMAIL_USER=you@gmail.com
+EMAIL_USER=<you@gmail.com>
 EMAIL_PASS=your-password
 
-🛠️ Scripts
+## 🛠️ Scripts
+
 Command Description
 npm run dev Run app in development mode (ts-node)
 npm run build Transpile TypeScript to JS
@@ -129,5 +132,6 @@ Real-time Ready: Plug in socket logic in seconds.
 
 Security First: Tokens, passwords, secrets handled with care.
 
-👨‍💻 Contributors
+## 👨‍💻 Contributors
+
 Jude Classic – CTO @ Bybu

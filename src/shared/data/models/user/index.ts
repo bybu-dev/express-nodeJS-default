@@ -1,5 +1,11 @@
-import { Schema, model, PaginateModel, Model } from 'mongoose';
-import mongoosePaginate from 'mongoose-paginate-v2';
+import {
+    Entity,
+    PrimaryGeneratedColumn,
+    Column,
+    CreateDateColumn,
+    UpdateDateColumn,
+    BaseEntity,
+  } from 'typeorm';
 
 export type IWallet = {
     balance: number;
@@ -16,7 +22,7 @@ export type ISetting = {
 }
 
 export type IUser = {
-    _id: Schema.Types.ObjectId,
+    _id: string,
     personal: IPersonal,
     password: string,
     wallet: IWallet;
@@ -39,76 +45,70 @@ export interface IGeneralUser {
     created_at: Date;
 }
 
-const PersonalSchema = new Schema<IPersonal>({
-    first_name: {
-        type: String,
-    },
-    surname: {
-        type: String,
-    },
-    email_address: {
-        type: String,
-    },
-})
-
-const WalletSchema = new Schema<IWallet>({
-    balance: {
-        type: Number,
-        default: 0,
-    },
-})
-
-const SettingSchema = new Schema<IWallet>({
-    balance: {
-        type: Number,
-        default: 0,
-    },
-})
-
-const UserSchema = new Schema<IUser>({
-    personal: PersonalSchema,
-    wallet: WalletSchema,
-    setting: SettingSchema,
-    password: {
-        type: String,
-    },
-    created_at: {
-        type: Date
-    },
-    updated_at: {
-        type: Date
-    },
-});
-
-mongoosePaginate(UserSchema);
-
-UserSchema.statics.toGeneralResponse = function(user: IUser): IGeneralUser {
-    return {
-      personal: user.personal,
-      created_at: user.created_at,
-      updated_at: user.updated_at,
-    };
-};
-
-UserSchema.statics.toResponse = function(user: IUser): ISecureUser {
-    return {
-      id: user._id.toString(),
-      personal: user.personal,
-      setting: user.setting,
-      created_at: user.created_at,
-      updated_at: user.updated_at,
-    };
-};
-
-export interface IUserModel extends PaginateModel<IUser>{
-    toGeneralResponse: (user: IUser) => IGeneralUser;
-    toResponse: (user: IUser) => ISecureUser
+  
+class Personal {
+    @Column({ type: 'varchar', length: 100 })
+    first_name!: string;
+  
+    @Column({ type: 'varchar', length: 100 })
+    surname!: string;
+  
+    @Column({ type: 'varchar', length: 255, unique: true })
+    email_address!: string;
+}
+  
+class Wallet {
+    @Column({ type: 'float', default: 0 })
+    balance!: number;
+}
+  
+class Setting {
+    @Column({ type: 'boolean', default: false })
+    is_banned!: boolean;
+}
+  
+@Entity('users')
+export class UserModel extends BaseEntity {
+    @PrimaryGeneratedColumn('uuid')
+    id!: string;
+  
+    @Column(() => Personal)
+    personal!: Personal;
+  
+    @Column(() => Wallet)
+    wallet!: Wallet;
+  
+    @Column(() => Setting)
+    setting!: Setting;
+  
+    @Column({ type: 'varchar', length: 255 })
+    password!: string;
+  
+    @CreateDateColumn()
+    created_at!: Date;
+  
+    @UpdateDateColumn()
+    updated_at!: Date;
+  
+    // 🧩 Helper methods (similar to Mongoose statics)
+    toResponse(): ISecureUser {
+      return {
+        id: this.id,
+        personal: this.personal,
+        setting: this.setting,
+        created_at: this.created_at,
+        updated_at: this.updated_at,
+      };
+    }
+  
+    toGeneralResponse(): IGeneralUser {
+      return {
+        personal: this.personal,
+        created_at: this.created_at,
+        updated_at: this.updated_at,
+      };
+    }
 }
 
-export const UserModel = model<IUser, PaginateModel<IUser>>("user", UserSchema) as IUserModel;
-
-export type IPaginatedUser = {
-    total_users: number;
-    users: IUser[];
-    has_next: boolean;
-}
+export type IUserModel = UserModel;
+  

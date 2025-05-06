@@ -1,31 +1,21 @@
-import { Schema, model, PaginateModel, Model } from 'mongoose';
-import mongoosePaginate from 'mongoose-paginate-v2';
+import { Entity, PrimaryGeneratedColumn, Column, BaseEntity } from 'typeorm';
 
-export type IAdmin = {
-    _id: Schema.Types.ObjectId,
-    name: string;
-    username: string;
-    profile_image: string;
-    password: string;
-};
+@Entity('admins')
+export class AdminModel extends BaseEntity {
+  @PrimaryGeneratedColumn('uuid')
+  id!: string;
 
-const AdminSchema = new Schema({
-    name: {
-        type: String,
-    },
-    email_address: {
-        type: String,
-    },
-    password: {
-        type: String,
-    },
-});
+  @Column({ type: 'varchar', length: 255 })
+  name!: string;
 
-mongoosePaginate(AdminSchema);
+  @Column({ type: 'varchar', length: 255, unique: true })
+  email_address!: string;
 
+  @Column({ type: 'varchar', length: 255 })
+  password!: string;
 
-
-export interface IAdminModel extends Model<IAdmin> {
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  profile_image?: string;
 }
 
-export const AdminModel = model<IAdmin, PaginateModel<IAdmin>>("admin", AdminSchema);
+export type IAdminModel = AdminModel;

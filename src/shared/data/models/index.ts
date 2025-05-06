@@ -1,16 +1,17 @@
-import { IAdminModel, AdminModel } from "./admin";
-import { IUserModel, UserModel } from "./user";
-
+import { DataSource, Repository } from 'typeorm';
+import { AdminModel } from './admin';
+import { UserModel } from './user';
 
 export class Models {
-    static new = async () => {
-        return new Models(
-            AdminModel,
-            UserModel,
-        )
-    }
-    constructor(
-        readonly admin: IAdminModel,
-        readonly user: IUserModel,
-    ) {}
+  static async new(dataSource: DataSource): Promise<Models> {
+    return new Models(
+      dataSource.getRepository(AdminModel),
+      dataSource.getRepository(UserModel)
+    );
+  }
+
+  constructor(
+    readonly admin: Repository<AdminModel>,
+    readonly user: Repository<UserModel>
+  ) {}
 }
