@@ -18,6 +18,10 @@ export class Token {
 type TokenType = 'Special Token';
 
 class EncryptionRepository {
+    createToken = () => {
+        return uuid()
+    }
+
     encryptToken = (data: any, token: TokenType, expiresIn = 60 * 60 * 24 * 5) => {
         return jwt.sign(data, token, { expiresIn });
     }

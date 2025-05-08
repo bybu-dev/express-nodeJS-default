@@ -62,9 +62,19 @@ class Wallet {
     balance!: number;
 }
   
+class Peripheral {
+    @Column({ type: 'varchar', length: 255 })
+    reset_password_token?: string;
+
+    @CreateDateColumn()
+    reset_password_expires?: Date;
+}
+
 class Setting {
     @Column({ type: 'boolean', default: false })
     is_banned!: boolean;
+    @Column(() => Peripheral)
+    peripheral!: Peripheral;
 }
   
 @Entity('users')
@@ -91,7 +101,7 @@ export class UserModel extends BaseEntity {
     updated_at!: Date;
   
     // 🧩 Helper methods (similar to Mongoose statics)
-    toResponse(): ISecureUser {
+    get toResponse(): ISecureUser {
       return {
         id: this.id,
         personal: this.personal,
@@ -101,7 +111,7 @@ export class UserModel extends BaseEntity {
       };
     }
   
-    toGeneralResponse(): IGeneralUser {
+    get toGeneralResponse(): IGeneralUser {
       return {
         personal: this.personal,
         created_at: this.created_at,

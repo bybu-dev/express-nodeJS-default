@@ -1,5 +1,6 @@
 import { Request, Response } from 'express'
-import ProfileService, { IUpdateUser } from './profile.service';
+import ProfileService from './profile.service';
+import { IUpdateUser } from './profile.type';
 
 class ProfileController {
     constructor(private readonly profileService: ProfileService) {}

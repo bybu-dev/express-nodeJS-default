@@ -13,7 +13,7 @@ class AuthService {
 
     login = async (request: ISignIn) : Promise<IResponse<IAuthResponse>> => {
         try {
-            const user = await this.model.user.findOne({ "personal.email_address": request.email_address });
+            const user = await this.model.user.findOne({ where: { personal: { email_address: request.email_address }}});
             if (!user) return { status: false, error: [{ message: "invalid credentials" }] };
 
             const isUserValid = this.repo.encryption.comparePassword(request.password, user.password);
@@ -43,11 +43,11 @@ class AuthService {
 
     register = async (request: ISignUp) : Promise<IResponse<IAuthResponse>> => {
         try {
-            const userExist = await UserModel.findOne({ "personal.email_address": request.email_address });
+            const userExist = await this.model.user.findOne({ where: { personal: { email_address : request.email_address }}});
             if (userExist) return { status: false, error: [{ message: "user exist already" }] };
 
             const password = this.repo.encryption.encryptPassword(request.password);
-            const user = await UserModel.create({
+            const user = await this.model.user.save({
                 personal: {
                   first_name: request.first_name,
                   second_name: request.second_name,
@@ -55,12 +55,7 @@ class AuthService {
                 },
                 password: password,
                 setting: {
-                  subscription: {
-                    package: "Pro",
-                    status: 'active',
-                    start_date: new Date(),
-                    end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days later
-                  }
+                    is_banned: false,
                 }
               });
             if (!user) return { status: false, error: [{ message: "unable to create account" }] };

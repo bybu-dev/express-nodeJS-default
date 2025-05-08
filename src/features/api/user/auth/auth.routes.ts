@@ -4,6 +4,7 @@ import AuthService from "./auth.service";
 import { IData } from "@/utils/types/types";
 import { SignInDTO, SignUpDTO } from "./auth.types";
 import { validateBody } from "@/middleware/validate";
+import passwordRouter from "./password/password.routes";
 
 const authRouter = (data: IData) => {
     const router = Router();
@@ -11,6 +12,8 @@ const authRouter = (data: IData) => {
 
     router.post('/register', validateBody(SignUpDTO), authController.register);
     router.post('/login', validateBody(SignInDTO), authController.login);
+    
+    router.use('/password', passwordRouter(data));
 
     return router
 }
