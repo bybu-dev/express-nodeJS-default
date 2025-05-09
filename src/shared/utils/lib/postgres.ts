@@ -8,12 +8,12 @@ class DBConnection {
 
   static async connect(): Promise<DataSource> {
     try {
-      let dbUrl = process.env.MONGODB_URL ?? '';
+      let dbUrl = process.env.POSTGRES_URL ?? '';
 
       this.dataSource = new DataSource({
-        type: 'mongodb',
+        type: 'postgres',
         url: dbUrl,
-        entities: [AdminModel, UserModel],
+        entities: [ AdminModel, UserModel ],
         synchronize: true,
       });
 

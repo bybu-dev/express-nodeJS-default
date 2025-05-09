@@ -6,6 +6,10 @@ export type IUpdateUser = {
     surname: string;
 };
 
+export type IUpdateProfile = {
+    image?: string;
+};
+
 export class UpdateUserDTO implements IUpdateUser {
   @IsString({ message: 'First name must be a string' })
   @Length(1, 50, { message: 'First name must be between 1 and 50 characters' })

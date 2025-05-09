@@ -34,8 +34,7 @@ const runApp = async () => {
     httpsServer.listen(PORT, () => {
         logger.log(`Server in Development Mode and Listening on port ${PORT}`, '');
         if (process.env.ENV !== 'production') {
-            console.log(router.socket.socketInfo
-                .map((sock) => ({ path: sock.path, action: sock.action.name })));
+            console.log(expressListEndpoints(app))
         }
     });
 

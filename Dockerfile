@@ -1,19 +1,14 @@
-FROM node:16-alpine
+FROM node:18-alpine
 
-# Set working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json
-COPY package*.json ./
-
-# Install dependencies
-RUN npm install
-
-# Copy source code
+COPY package.json .
+COPY ecosystem.config.js .
 COPY . .
 
-# Expose the port number (adjust if necessary)
+RUN npm install --production
+RUN npm install pm2 -g
+
 EXPOSE 8080
 
-# Start the application
-CMD [ "npm", "start" ]
+CMD ["pm2-runtime", "start", "ecosystem.config.js"]

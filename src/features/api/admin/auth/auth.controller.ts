@@ -1,20 +1,18 @@
-import { Request, Response } from 'express'
-import AuthService, { ISignIn, ISignUp } from './auth.service';
+import { Request, Response } from 'express';
+import AuthService from './auth.service';
+import { ISignIn, ISignUp } from './auth.types';
+import { IAuthResponse, IResponse, ResponseProps } from '@/utils/types/types';
 
-class AuthController {
-    constructor(private readonly authService: AuthService) {}
+export default class AuthController {
+  constructor(private readonly authService: AuthService) {}
 
-    register = async (req: Request & { body: ISignIn }, res: Response) => {
-        const response = await this.authService.register(req.body);
-        if (!response.status) return res.status(400).json(response);
-        res.json(response);
-    }
-    
-    login = async (req: Request & { body: ISignUp }, res: Response) => {
-        const response = await this.authService.login(req.body);
-        if (!response.status) return res.status(400).json(response);
-        res.json(response);
-    }
+  register = async (req: Request<{}, any, ISignUp>,  res: Response<ResponseProps<IAuthResponse>> ): Promise<void> => {
+    const result = await this.authService.register(req.body);
+    res.status(result.status ? 200 : 400).json(result);
+  };
+
+  login = async (req: Request<{}, any, ISignIn>, res: Response<ResponseProps<IAuthResponse>>): Promise<void> => {
+    const result = await this.authService.login(req.body);
+    res.status(result.status ? 200 : 400).json(result);
+  };
 }
-
-export default AuthController;

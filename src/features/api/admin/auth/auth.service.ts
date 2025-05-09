@@ -3,18 +3,7 @@ import { Token } from "@/repositories/encryption";
 import { IAuthResponse, IAuthUser, IResponse } from "@/utils/types/types";
 import { Repositories } from "@/repositories";
 import { Models } from "@/models";
-
-export type ISignIn = {
-    email_address: string;
-    password: string;
-}
-
-export type ISignUp = {
-    first_name: string;
-    second_name: string;
-    email_address: string;
-    password: string;
-}
+import { ISignIn, ISignUp } from "./auth.types";
 
 class AuthService {
     constructor(
@@ -24,7 +13,7 @@ class AuthService {
 
     login = async (request: ISignIn) : Promise<IResponse<IAuthResponse>> => {
         try {
-            const user = await this.model.user.findOne({ "personal.email_address": request.email_address });
+            const user = await this.model.admin.findOne({ where: { email_address: request.email_address }});
             if (!user) return { status: false, error: [{ message: "invalid credentials" }] };
 
             const isUserValid = this.repo.encryption.comparePassword(request.password, user.password);
@@ -32,13 +21,13 @@ class AuthService {
 
             const auth: IAuthUser = {
                 id: user.id,
-                first_name: user.personal.first_name,
-                email_address: user.personal.email_address,
+                first_name: user.name,
+                email_address: user.email_address,
                 created_at: new Date(),
             }
 
-            const accessToken = this.repo.encryption.encryptToken(auth, Token.accessToken);
-            const refreshToken = this.repo.encryption.encryptToken(auth, Token.refreshToken);
+            const accessToken = this.repo.encryption.encryptToken(auth, Token.adminAccessToken);
+            const refreshToken = this.repo.encryption.encryptToken(auth, Token.adminAccessToken);
 
             return { status: true, data: {
                 id: auth.id,
@@ -54,25 +43,15 @@ class AuthService {
 
     register = async (request: ISignUp) : Promise<IResponse<IAuthResponse>> => {
         try {
-            const userExist = await UserModel.findOne({ "personal.email_address": request.email_address });
+            const userExist = await this.model.user.findOne({ where: { personal: { email_address : request.email_address }}});
             if (userExist) return { status: false, error: [{ message: "user exist already" }] };
 
             const password = this.repo.encryption.encryptPassword(request.password);
-            const user = await UserModel.create({
-                personal: {
-                  first_name: request.first_name,
-                  second_name: request.second_name,
-                  email_address: request.email_address,
-                },
+            const user = await this.model.user.save({
+                name: request.name,
+                email_address: request.email_address,
                 password: password,
-                setting: {
-                  subscription: {
-                    package: "Pro",
-                    status: 'active',
-                    start_date: new Date(),
-                    end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days later
-                  }
-                }
+                setting: { is_banned: false }
               });
             if (!user) return { status: false, error: [{ message: "unable to create account" }] };
 

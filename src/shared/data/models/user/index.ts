@@ -49,10 +49,13 @@ export interface IGeneralUser {
 class Personal {
     @Column({ type: 'varchar', length: 100 })
     first_name!: string;
-  
+
     @Column({ type: 'varchar', length: 100 })
     surname!: string;
-  
+    
+    @Column({ type: 'varchar', length: 400 })
+    image?: string;
+
     @Column({ type: 'varchar', length: 255, unique: true })
     email_address!: string;
 }
@@ -100,7 +103,6 @@ export class UserModel extends BaseEntity {
     @UpdateDateColumn()
     updated_at!: Date;
   
-    // 🧩 Helper methods (similar to Mongoose statics)
     get toResponse(): ISecureUser {
       return {
         id: this.id,

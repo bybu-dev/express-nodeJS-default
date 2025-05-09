@@ -1,39 +1,41 @@
-import { body, validationResult } from 'express-validator';
-import { Request, Response, NextFunction } from 'express';
+import { IsEmail, IsString, Length, Matches } from 'class-validator';
+import { Transform } from 'class-transformer';
 
-// Shared validators (reusable)
-const emailValidator = body('email_address')
-  .trim()
-  .notEmpty().withMessage('Email is required')
-  .isEmail().withMessage('Invalid email format')
-  .normalizeEmail();
+export type ISignIn = {
+  email_address: string;
+  password: string;
+}
 
-const passwordValidator = body('password')
-  .trim()
-  .notEmpty().withMessage('Password is required')
-  // .isLength({ min: 8 }).withMessage('Password must be at least 8 characters')
-  // .matches(/[A-Z]/).withMessage('Password must contain at least one uppercase letter')
-  // .matches(/[a-z]/).withMessage('Password must contain at least one lowercase letter')
-  .matches(/[0-9]/).withMessage('Password must contain at least one number');
+export class SignInDTO {
+  @IsEmail({}, { message: 'Invalid email format' })
+  @Transform(({ value }) => value?.trim().toLowerCase())
+  email_address!: string;
 
-// SignIn Validator
-export const validateLogin = [
-  emailValidator,
-  passwordValidator,
-];
+  @IsString({ message: 'Password is required' })
+  @Matches(/[0-9]/, { message: 'Password must contain at least one number' })
+  @Transform(({ value }) => value?.trim())
+  password!: string;
+}
 
-// SignUp Validator
-export const validateRegister = [
-  body('first_name')
-    .trim()
-    .notEmpty().withMessage('First name is required')
-    .isLength({ max: 50 }).withMessage('First name too long'),
+export type ISignUp = {
+  name: string;
+  email_address: string;
+  password: string;
+}
 
-  body('second_name')
-    .trim()
-    .optional()
-    .isLength({ max: 50 }).withMessage('Second name too long'),
+export class SignUpDTO {
+  @IsString({ message: 'Name is required' })
+  @Length(1, 50, { message: 'Name must be between 1 and 50 characters' })
+  @Transform(({ value }) => value?.trim())
+  name!: string;
 
-  emailValidator,
-  passwordValidator,
-];
+
+  @IsEmail({}, { message: 'Invalid email format' })
+  @Transform(({ value }) => value?.trim().toLowerCase())
+  email_address!: string;
+
+  @IsString({ message: 'Password is required' })
+  @Matches(/[0-9]/, { message: 'Password must contain at least one number' })
+  @Transform(({ value }) => value?.trim())
+  password!: string;
+}
