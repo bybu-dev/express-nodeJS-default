@@ -22,7 +22,7 @@ export type ISetting = {
 }
 
 export type IUser = {
-    _id: string,
+    id: string,
     personal: IPersonal,
     password: string,
     wallet: IWallet;

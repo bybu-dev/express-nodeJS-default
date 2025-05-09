@@ -1,99 +1,43 @@
-import EncryptionRepository, { Token } from '@/repositories/encryption';
-import { SuccessResponseProps } from '@/utils/types/types';
+/** @jest-environment node */
 
-describe('EncryptionRepository', () => {
-  const encryption = new EncryptionRepository();
+import EmailRepository from '@/repositories/notification';
+import { IEmailTem } from '@/repositories/notification/template';
+import nodemailer from 'nodemailer';
 
-  describe('Token encryption/decryption', () => {
-    it('should sign and verify token correctly', () => {
-      const payload = { id: '123', role: 'user' };
-      const signed = encryption.encryptToken(payload, Token.accessToken, 60);
-      const decoded = encryption.decryptToken(signed, Token.accessToken) as any;
+// jest.mock('nodemailer');
+const createTransportMock = jest.fn();
+(nodemailer as any).createTransport = createTransportMock;
 
-      expect(decoded.id).toBe(payload.id);
-      expect(decoded.role).toBe(payload.role);
+describe('EmailRepository', () => {
+  const sendMailMock = jest.fn();
+
+  beforeEach(() => {
+    sendMailMock.mockReset();
+    createTransportMock.mockReturnValue({
+      sendMail: sendMailMock,
     });
   });
 
-  describe('Password encryption/compare', () => {
-    it('should hash and compare password correctly', () => {
-      const password = 'supersecret';
-      const hash = encryption.encryptPassword(password);
+  it('should send an email with correct details', async () => {
+    const emailRepo = new EmailRepository();
 
-      const match = encryption.comparePassword(password, hash);
-      const fail = encryption.comparePassword('wrong', hash);
+    const mockTemplate: IEmailTem = {
+      subject: 'Test Subject',
+      html: '<p>Test HTML content</p>',
+    };
 
-      expect(match).toBe(true);
-      expect(fail).toBe(false);
-    });
-  });
+    const recipientEmail = 'recipient@example.com';
 
-  describe('createSpecialKey', () => {
-    it('should generate UUID with prefix/suffix and optional dashes removed', () => {
-      const key = encryption.createSpecialKey({ prefix: 'PRE-', suffix: '-SUF', removeDashes: true });
-      expect(key.startsWith('PRE-')).toBe(true);
-      expect(key.endsWith('-SUF')).toBe(true);
-    });
-  });
+    await emailRepo.sendEmail(recipientEmail, mockTemplate);
 
-  describe('verifyBearerToken', () => {
-    it('should verify a valid bearer token', () => {
-      const token = encryption.encryptToken({ user: 'jude' }, Token.accessToken);
-      const bearer = `Bearer ${token}`;
-      const result = encryption.verifyBearerToken(bearer, Token.accessToken);
-
-      expect(result.status).toBe(true);
-      expect((result.data as any).user).toBe('jude');
-    });
-
-    it('should reject invalid or expired token', () => {
-      const result = encryption.verifyBearerToken('Bearer invalid-token', Token.accessToken);
-      expect(result.status).toBe(false);
-    });
-  });
-
-  describe('generateVerificationCode', () => {
-    it('should generate numeric code with timeout', () => {
-      const { code, timeout } = encryption.generateVerificationCode(6);
-      expect(code).toHaveLength(6);
-      expect(+code).not.toBeNaN();
-      expect(timeout).toBeGreaterThan(Date.now());
-    });
-  });
-
-  describe('generateRandomStringCode', () => {
-    it('should generate alphanumeric string of given length', () => {
-      const code = encryption.generateRandomStringCode(10);
-      expect(code).toMatch(/^[A-Za-z0-9]{10}$/);
-    });
-  });
-
-  describe('encryptId and decryptId', () => {
-    it('should encrypt and decrypt an ID', () => {
-      const originalId = 'abc-123';
-      const encrypted = encryption.encryptId(originalId, Token.accessToken) as SuccessResponseProps<string>;
-      expect(encrypted.status).toBe(true);
-
-      const decrypted = encryption.decryptId(encrypted.data!, Token.accessToken) as SuccessResponseProps<string>;
-      expect(decrypted.status).toBe(true);
-      expect(decrypted.data).toBe(originalId);
-    });
-  });
-
-  describe('generateKeyPairs', () => {
-    it('should generate a public and private key', () => {
-      const { publicKey, privateKey } = encryption.generateKeyPairs();
-      expect(publicKey).toContain('BEGIN PUBLIC KEY');
-      expect(privateKey).toContain('BEGIN ENCRYPTED PRIVATE KEY');
-    });
-  });
-
-  describe('encryptWithPublicKey', () => {
-    it('should encrypt data with a public key', () => {
-      const { publicKey } = encryption.generateKeyPairs();
-      const encrypted = encryption.encryptWithPublicKey('secret-data', publicKey) as SuccessResponseProps<string>;
-      expect(encrypted.status).toBe(true);
-      expect(typeof encrypted.data).toBe('string');
-    });
+    expect(sendMailMock).toHaveBeenCalledWith(
+      {
+        from: '',
+        to: recipientEmail,
+        subject: mockTemplate.subject,
+        html: mockTemplate.html,
+      },
+      expect.any(Function)
+    );
   });
 });

@@ -100,7 +100,7 @@ class EncryptionRepository {
                 type: 'pkcs8',
                 format: 'pem',
                 cipher: 'aes-256-cbc', // Optional encryption
-                passphrase: process.env.ADMIN_ACCESS_TOKEN_SECRET,
+                passphrase: process.env.ADMIN_ACCESS_TOKEN_SECRET ?? "",
             }
         });
         return { publicKey, privateKey };

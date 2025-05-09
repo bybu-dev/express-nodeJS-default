@@ -17,7 +17,7 @@ class AuthService {
             if (!user) return { status: false, error: [{ message: "invalid credentials" }] };
 
             const isUserValid = this.repo.encryption.comparePassword(request.password, user.password);
-            if (!isUserValid) return { status: false, error: [{ message: "invalid credentials" }] };
+            if (!isUserValid) return { status: false, error: [{ message: "invalid credentials" }], message: "invalid credentials" };
 
             const auth: IAuthUser = {
                 id: user.id,

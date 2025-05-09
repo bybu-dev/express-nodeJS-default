@@ -1,11 +1,11 @@
 import { IUser, ISecureUser } from "@/models/user";
-import { ErrorResponseProps, IAuthUser, IResponse } from "@/utils/types/types";
+import { IAuthUser } from "@/utils/types/types";
 import { Models } from "@/models";
 import ProfileService from "@/features/api/user/personal/profile/profile.service";
 
 // Mocks
 const mockUser: IUser = {
-  _id: "123" as any,
+  id: "123" as any,
   personal: {
     first_name: "John",
     surname: "Doe",
@@ -26,11 +26,18 @@ const mockSecureUser: ISecureUser = {
   updated_at: mockUser.updated_at,
 };
 
-const mockUserModel = {
-  findById: jest.fn(),
-  findByIdAndUpdate: jest.fn(),
-  toResponse: jest.fn().mockReturnValue(mockSecureUser),
+const mockUserEntity = {
+  ...mockUser,
+  toResponse: mockSecureUser,
+}
+
+// mocks/user.repository.ts
+export const mockUserModel = {
+  findOne: jest.fn(),
+  save: jest.fn(),
+  // Add other methods as needed
 };
+
 
 const mockModels = {
   user: mockUserModel,
@@ -53,22 +60,20 @@ describe("ProfileService", () => {
 
   describe("getProfile", () => {
     it("should return user profile if found", async () => {
-      mockUserModel.findById.mockResolvedValueOnce(mockUser);
-
+      mockUserModel.findOne.mockResolvedValueOnce(mockUserEntity);
+  
       const result = await profileService.getProfile(mockAuth);
-
-      console.log("result: ", result)
-
-      expect(mockUserModel.findById).toHaveBeenCalledWith("123");
-      expect(mockUserModel.toResponse).toHaveBeenCalledWith(mockUser);
+  
+      expect(mockUserModel.findOne).toHaveBeenCalledWith({ where: { id: "123" } });
+      jest.spyOn(mockUserEntity, 'toResponse', 'get').mockReturnValue(mockSecureUser);
       expect(result).toEqual({ status: true, data: mockSecureUser });
     });
-
+  
     it("should return error if user not found", async () => {
-      mockUserModel.findById.mockResolvedValueOnce(null);
-
+      mockUserModel.findOne.mockResolvedValueOnce(null);
+  
       const result = await profileService.getProfile(mockAuth);
-
+  
       expect(result.status).toBe(false);
       expect(result.message).toBe("unable to get user");
     });
@@ -76,34 +81,45 @@ describe("ProfileService", () => {
 
   describe("updateProfile", () => {
     it("should update and return updated user", async () => {
-      mockUserModel.findByIdAndUpdate.mockResolvedValueOnce(mockUser);
-
       const request = { first_name: "Jane", surname: "Smith" };
+  
+      // Mock the user entity
+      const mockUserEntity2 = mockUserEntity;
+      mockUserEntity2.personal.first_name = request.first_name
+      mockUserEntity2.personal.surname = request.surname
 
+      const mockUserResult = mockSecureUser;
+      mockUserResult.personal.first_name = request.first_name
+      mockUserResult.personal.surname = request.surname
+  
+      // Mock the repository methods
+      mockUserModel.findOne.mockResolvedValue(mockUserEntity);
+      mockUserModel.save.mockResolvedValue(mockUserEntity2);
+  
+      // Mock the toResponse getter
+      // jest.spyOn(mockUserEntity2, 'toResponse', 'get').mockReturnValue(mockUserResult);
+  
       const result = await profileService.updateProfile(mockAuth, request);
-
-      expect(mockUserModel.findByIdAndUpdate).toHaveBeenCalledWith(
-        "123",{
-          "personal.first_name": request.first_name,
-          "personal.surname": request.surname,
-      }, { new: true });
-
-      expect(mockUserModel.toResponse).toHaveBeenCalledWith(mockUser);
-      expect(result).toEqual({ status: true, data: mockSecureUser });
+  
+      expect(mockUserModel.findOne).toHaveBeenCalledWith({ where: { id: "123" } });
+      expect(mockUserEntity.personal.first_name).toBe(request.first_name);
+      expect(mockUserEntity.personal.surname).toBe(request.surname);
+      expect(mockUserModel.save).toHaveBeenCalledWith(mockUserEntity);
+      expect(result).toEqual({ status: true, data: mockUserResult });
     });
-
+  
     it("should return error if user is not found", async () => {
-      mockUserModel.findByIdAndUpdate.mockResolvedValueOnce(null);
-
+      mockUserModel.findOne.mockResolvedValue(null);
+  
       const result = await profileService.updateProfile(mockAuth, {
         first_name: "Test",
         surname: "Fail",
-      }) as ErrorResponseProps;
-
-      console.log("result: ", result);
-
+      });
+  
+      expect(mockUserModel.findOne).toHaveBeenCalledWith({ where: { id: "123" } });
       expect(result.status).toBe(false);
       expect(result.message).toBe("unable to update user");
     });
   });
+  
 });

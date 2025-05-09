@@ -1,24 +1,15 @@
 import { Models } from '@/models';
 import { Repositories } from '@/repositories';
-import { UserModel } from '@/models/user';
-import AuthService from '@/features/api/user/auth/auth.service';
-import { ISignIn, ISignUp } from '@/features/api/user/auth/auth.types';
+import AuthService from '@/features/api/admin/auth/auth.service';
+import { ISignIn, ISignUp } from '@/features/api/admin/auth/auth.types';
+import { ErrorResponseProps } from '@/utils/types/types';
 
-// Mock user
-import { IUser } from '@/models/user';
-import { ErrorResponseProps, IAuthResponse, SuccessResponseProps } from '@/utils/types/types';
-
-const mockUser: Partial<IUser> = {
-  id: 'user123',
-  personal: {
-    first_name: 'John',
-    surname: 'Doe',
-    email_address: 'john@example.com',
-  },
+// Mock admin
+const mockAdmin = {
+  id: 'admin123',
+  name: 'John',
+  email_address: 'john@example.com',
   password: 'hashedPassword',
-  setting: {
-    is_banned: false,
-  },
 };
 
 describe('AuthService', () => {
@@ -28,18 +19,19 @@ describe('AuthService', () => {
     encryptToken: jest.fn().mockReturnValue('fake-token'),
   };
 
+  const mockModels = {
+    admin: {
+      findOne: jest.fn(),
+    },
+    user: {
+      findOne: jest.fn(),
+      save: jest.fn(),
+    },
+  } as unknown as Models;
+
   const mockRepositories = {
     encryption: mockEncryption,
   } as unknown as Repositories;
-
-  const mockUserRepo = {
-    findOne: jest.fn(),
-    save: jest.fn(),
-  };
-
-  const mockModels = {
-    user: mockUserRepo,
-  } as unknown as Models;
 
   const service = new AuthService(mockRepositories, mockModels);
 
@@ -53,27 +45,27 @@ describe('AuthService', () => {
       password: 'password123',
     };
 
-    it('should return error if user not found', async () => {
-      mockUserRepo.findOne.mockResolvedValue(null);
+    it('should return error if admin not found', async () => {
+      mockModels.admin.findOne = jest.fn().mockResolvedValue(null);
 
       const result = await service.login(request) as ErrorResponseProps;
 
       expect(result.status).toBe(false);
-      expect(result.error?.[0]?.message).toBe('invalid credentials');
+      expect(result.error?.[0].message).toBe('invalid credentials');
     });
 
     it('should return error if password is invalid', async () => {
-      mockUserRepo.findOne.mockResolvedValue(mockUser);
+      mockModels.admin.findOne = jest.fn().mockResolvedValue(mockAdmin);
       mockEncryption.comparePassword = jest.fn().mockReturnValue(false);
 
-      const result = await service.login(request);
+      const result = await service.login(request) as ErrorResponseProps;
 
       expect(result.status).toBe(false);
-      expect(result.message).toBe('invalid credentials');
+      expect(result.error?.[0].message).toBe('invalid credentials');
     });
 
     it('should return tokens on valid login', async () => {
-      mockUserRepo.findOne.mockResolvedValue(mockUser);
+      mockModels.admin.findOne = jest.fn().mockResolvedValue(mockAdmin);
       mockEncryption.comparePassword = jest.fn().mockReturnValue(true);
 
       const result = await service.login(request);
@@ -87,37 +79,42 @@ describe('AuthService', () => {
 
   describe('register', () => {
     const request: ISignUp = {
-      first_name: 'Jane',
-      second_name: 'Doe',
+      name: 'Jane',
       email_address: 'jane@example.com',
       password: 'pass123',
     };
 
+    const mockUser = {
+      id: 'user123',
+      name: 'Jane',
+      email_address: 'jane@example.com',
+      personal: { first_name: 'Jane' },
+      password: 'hashedPassword',
+      setting: { is_banned: false },
+    };
+
     it('should return error if user already exists', async () => {
-      mockUserRepo.findOne.mockResolvedValue(mockUser);
+      mockModels.user.findOne = jest.fn().mockResolvedValue(mockUser);
 
       const result = await service.register(request) as ErrorResponseProps;
 
       expect(result.status).toBe(false);
-      expect(result?.error?.[0]?.message).toBe('user exist already');
+      expect(result.error?.[0].message).toBe('user exist already');
     });
 
     it('should create user and return tokens', async () => {
-      mockUserRepo.findOne.mockResolvedValue(null);
+      mockModels.user.findOne = jest.fn().mockResolvedValue(null);
       mockEncryption.encryptPassword = jest.fn().mockReturnValue('hashedPassword');
-      mockUserRepo.save.mockResolvedValue(mockUser);
+      mockModels.user.save = jest.fn().mockResolvedValue(mockUser);
 
       const result = await service.register(request);
 
-      // expect(mockUserRepo.save).toHaveBeenCalledWith(
-      //   expect.objectContaining({
-      //     personal: expect.objectContaining({
-      //       first_name: request.first_name,
-      //       surname: request.second_name,
-      //       email_address: 'jane@example.com',
-      //     }),
-      //   })
-      // );
+      expect(mockModels.user.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'Jane',
+          email_address: 'jane@example.com',
+        })
+      );
 
       expect(result.status).toBe(true);
       if (!result.status) return;
