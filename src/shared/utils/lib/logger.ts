@@ -15,20 +15,19 @@ const httpTransportOptions = {
   ssl: true,
 };
 
-export const logger = console;
-// createLogger({
-//   levels: config.syslog.levels,
-//   format: useFormat,
-//   transports: [
-//     new transports.Console(),
-//     new transports.File({ filename: "combined.log" }),
-//     new transports.Http(httpTransportOptions),
-//   ],
-//   exceptionHandlers: [
-//     new transports.Console(),
-//     new transports.File({ filename: "combined.log" }),
-//   ],
-// });
+export const logger = createLogger({
+  levels: config.syslog.levels,
+  format: useFormat,
+  transports: [
+    new transports.Console(),
+    new transports.File({ filename: "combined.log" }),
+    new transports.Http(httpTransportOptions),
+  ],
+  exceptionHandlers: [
+    new transports.Console(),
+    new transports.File({ filename: "combined.log" }),
+  ],
+});
 
 export const userLogger = console;
 // createLogger({

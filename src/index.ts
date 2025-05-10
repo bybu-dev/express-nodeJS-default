@@ -8,11 +8,15 @@ import { Repositories } from '@/repositories/index';
 import { Models } from '@/models/index';
 import { loadConfig } from '@/utils/helper';
 import DBConnection from '@/utils/lib/postgres';
+import { burstDetection, ddosProtection } from '@/middleware/limiter';
 
 const runApp = async () => {
     loadConfig()
     const app = express();
     const dataSource = await DBConnection.connect();
+    
+    app.use(burstDetection);
+    app.use(ddosProtection);
     
     app.use(cors());
     app.use(express.static('public'));

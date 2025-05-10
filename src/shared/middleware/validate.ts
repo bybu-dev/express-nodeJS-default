@@ -1,6 +1,7 @@
 import { RequestHandler } from 'express';
 import { ClassConstructor, plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
+import { logger } from '@/utils/lib/logger';
 
 type ValidationTarget = 'body' | 'query' | 'params';
 
@@ -23,7 +24,7 @@ const createValidator = <T extends object>(
         message: Object.values(error.constraints || {})[0] || 'Invalid field',
       }));
 
-      console.error("Validation error:", formattedErrors);
+      logger.error("Validation error:", formattedErrors);
 
       res.status(400).json({
         status: false,
