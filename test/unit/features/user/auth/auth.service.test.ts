@@ -66,10 +66,11 @@ describe('AuthService', () => {
       mockUserRepo.findOne.mockResolvedValue(mockUser);
       mockEncryption.comparePassword = jest.fn().mockReturnValue(false);
 
-      const result = await service.login(request);
+      const result = await service.login(request) as ErrorResponseProps;
 
       expect(result.status).toBe(false);
-      expect(result.message).toBe('invalid credentials');
+      expect(result?.error?.[0]?.field).toBe('password');
+      expect(result?.error?.[0]?.message).toBe('invalid credentials');
     });
 
     it('should return tokens on valid login', async () => {
