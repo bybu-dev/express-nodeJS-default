@@ -4,7 +4,7 @@ import { IError } from "./types"
 export class RepoErrorConstructor extends Error {
     constructor(readonly message: string, packages: string, error?: IError[]) {
         super(message)
-        logger.error("Error in package", {packages, error})
+        logger.error("Error in package", { packages, error })
     }
 }
 

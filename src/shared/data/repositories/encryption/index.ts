@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { v4 as uuid } from 'uuid';
 import { constants, createCipheriv, createDecipheriv, generateKeyPairSync, publicEncrypt, randomBytes, scryptSync } from 'crypto';
-import { IResponse, ResponseProps } from '@/utils/types/types';
+import { ResponseProps } from '@/utils/types/types';
 
 export class Token {
     static get accessToken() { return process.env.ACCESS_TOKEN_SECRET! as TokenType }

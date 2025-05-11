@@ -53,7 +53,7 @@ class Personal {
     @Column({ type: 'varchar', length: 100 })
     surname!: string;
     
-    @Column({ type: 'varchar', length: 400 })
+    @Column({ type: 'varchar', length: 400, nullable: true })
     image?: string;
 
     @Column({ type: 'varchar', length: 255, unique: true })
@@ -61,12 +61,12 @@ class Personal {
 }
   
 class Wallet {
-    @Column({ type: 'float', default: 0 })
+    @Column({ type: 'float', default: 0,  })
     balance!: number;
 }
   
 class Peripheral {
-    @Column({ type: 'varchar', length: 255 })
+    @Column({ type: 'varchar', length: 255, nullable: true })
     reset_password_token?: string;
 
     @CreateDateColumn()

@@ -4,6 +4,7 @@ import { IAuthResponse, IAuthUser, IResponse } from "@/utils/types/types";
 import { Repositories } from "@/repositories";
 import { Models } from "@/models";
 import { ISignIn, ISignUp } from "./auth.types";
+import { logger } from "@/utils/lib/logger";
 
 class AuthService {
     constructor(
@@ -14,10 +15,10 @@ class AuthService {
     login = async (request: ISignIn) : Promise<IResponse<IAuthResponse>> => {
         try {
             const user = await this.model.user.findOne({ where: { personal: { email_address: request.email_address }}});
-            if (!user) return { status: false, error: [{ message: "invalid credentials" }] };
+            if (!user) return { status: false, error: [{ field: "password", message: "invalid credentials" }] };
 
             const isUserValid = this.repo.encryption.comparePassword(request.password, user.password);
-            if (!isUserValid) return { status: false, error: [{ message: "invalid credentials" }], message: "invalid credentials" };
+            if (!isUserValid) return { status: false, error: [{ field: "password", message: "invalid credentials" }]};
 
             const auth: IAuthUser = {
                 id: user.id,
@@ -50,7 +51,7 @@ class AuthService {
             const user = await this.model.user.save({
                 personal: {
                   first_name: request.first_name,
-                  second_name: request.second_name,
+                  surname: request.second_name,
                   email_address: request.email_address,
                 },
                 password: password,
@@ -76,6 +77,7 @@ class AuthService {
                 created_at: (new Date()).toISOString(),
             }};
         } catch (err) {
+            logger.error("Error: ", err)
             return { status: false, message: err as string };
         }
     }

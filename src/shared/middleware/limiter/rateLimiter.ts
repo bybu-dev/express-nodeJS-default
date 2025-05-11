@@ -1,7 +1,7 @@
 import rateLimit from 'express-rate-limit';
 import RedisStore from 'rate-limit-redis';
 import { getIpAddress } from './ipBlocker';
-import { REDIS_KEYS } from '@/utils/lib/redis';
+import redisClient, { REDIS_KEYS } from '@/utils/lib/redis';
 import { config } from './constant';
 
 export function createRedisStore() {
